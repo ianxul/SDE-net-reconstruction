@@ -10,7 +10,7 @@ def gen_hurwitz() -> np.matrix:
             [0.0, -1.0, -1.0]
         ])
 
-def run_process(A_mat:np.matrix, time:float, res:float = 0.1) -> np.array:
+def run_process(A_mat:np.matrix, time_length:float, step:float = 0.1) -> np.array:
     N = len(A_mat)
     # Define deterministic part of differential equation
     diff_sys = [sum([A_mat[i,j]*y(j) for j in range(N)]) for i in range(N)]
@@ -25,7 +25,7 @@ def run_process(A_mat:np.matrix, time:float, res:float = 0.1) -> np.array:
     SDE.set_initial_value(initial_state, 0.0)
 
     data = []
-    for time in np.arange(0.0, time, res):
+    for time in np.arange(0.0, time_length, step):
         data.append(SDE.integrate(time))
 
     return np.array(data)

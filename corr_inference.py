@@ -31,7 +31,7 @@ def get_A_sol(x_sol, n, alphas, betas, E):
             A_sol[i,j] = betas[i,j] + sum(x_sol*np.array([alphas[i,j,l,k] for l in range(n) for k in range(l+1,n)]))
     return A_sol
 
-# Linear programming to find solution
+# Linear programming to find solution. Assumption is that there are at least n(n-1)/2 zeroes.
 def find_sol_lp(dt, E):
     n = E.shape[0]
     gamma = get_gamma(dt)
@@ -80,7 +80,7 @@ def find_sol_lp(dt, E):
     print(opt_res)
     return A_sol
 
-# Solving the problem under the assumption that the number of zeroes exceeds n(n-1)/2. Obsolete. Linear programming works much better.
+# Solving the problem under the assumption that the number of zeroes is exactly n(n-1)/2.
 def find_sol_la(dt, E):
     n = E.shape[0]
     gamma = get_gamma(dt)
