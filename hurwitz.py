@@ -2,7 +2,7 @@ import numpy as np
 
 from jitcsde import jitcsde, y
 
-# Function to generate a random Hurtzian matrix
+# Function to generate a random Hurtzian matrix (not yet implemented)
 def gen_hurwitz() -> np.matrix:
     return np.matrix([
             [-1.0,0.0, -1.0],
