@@ -26,13 +26,13 @@ def get_A_sol(x_sol, n, alphas, betas, E):
     A_sol = np.full((n,n), 0.0)
     for i in range(n):
         for j in range(n):
-            if E[i,j] == 0.:
-                continue
+            # if E[i,j] == 0.:
+            #     continue
             A_sol[i,j] = betas[i,j] + sum(x_sol*np.array([alphas[i,j,l,k] for l in range(n) for k in range(l+1,n)]))
     return A_sol
 
 # Linear programming to find solution. Assumption is that there are at least n(n-1)/2 zeroes.
-def find_sol_lp(dt, E):
+def find_sol_lp(dt, E, verbose = True):
     n = E.shape[0]
     gamma = get_gamma(dt)
     u, U = la.eig(gamma)
@@ -77,7 +77,7 @@ def find_sol_lp(dt, E):
     x_sol = opt_res.x[:ut_n]
 
     A_sol = get_A_sol(x_sol, n, alphas, betas, E)
-    print(opt_res)
+    if verbose: print(opt_res)
     return A_sol
 
 # Solving the problem under the assumption that the number of zeroes is exactly n(n-1)/2.
@@ -120,8 +120,9 @@ def find_sol_la(dt, E):
     # print(opt_res)
     return A_sol
 
-def run_test(A, time = 1000, step = 0.01):
-    dt = hurwitz.run_process(A, time, step)
+def run_test(A, dt = None, time = 1000, step = 0.01):
+    if not np.any(dt):
+        dt = hurwitz.run_process(A, time, step).T
     E = np.abs(np.sign(A))
     A_sol = find_sol_lp(dt, E)
     print("Test matrix was:")

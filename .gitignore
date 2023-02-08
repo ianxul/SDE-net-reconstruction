@@ -130,3 +130,6 @@ dmypy.json
 
 # Local notebook for tests
 local_tests.ipynb
+
+# Pickled objects
+pickles/
