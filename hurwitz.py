@@ -1,14 +1,17 @@
 import numpy as np
+import networkx as nx
 
 from jitcsde import jitcsde, y
 
 # Function to generate a random Hurtzian matrix (not yet implemented)
-def random_hurwitz() -> np.matrix:
-    return np.matrix([
-            [-1.0,0.0, -1.0],
-            [0.5, -2.0, 0.0],
-            [0.0, -1.0, -1.0]
-        ])
+def random_hurwitz(n) -> np.matrix:
+    G = nx.fast_gnp_random_graph(n, p = 2./n, directed=True)
+    A_mat = np.full((n,n), 0.)
+    for e in G.edges:
+        A_mat[e[0],e[1]] = np.random.randn()
+    for ii in range(n):
+        A_mat[ii,ii] = -np.sum(np.abs(A_mat[ii,:])) - 0.1
+    return A_mat
 
 def run_process(A_mat:np.matrix, time_length:float, step:float = 0.1, noise = 1., verbose = True, diff_sys = None) -> np.array:
     N = len(A_mat)

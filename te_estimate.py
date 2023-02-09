@@ -13,12 +13,15 @@ def estimate_CTE(source, target, TE_estimator, conditions = np.array([]), tau_so
                 target[(max_tau-tau_target):-tau_target],
                 conditions[(max_tau-tau_conditions):-tau_conditions,:]
             ])
-    
-    return TE_estimator.estimate(
+    TE_est = TE_estimator.estimate(
         target[max_tau:],
         source[(max_tau-tau_source):-tau_source],
         conditions_array
-        )[0]
+        )
+    if isinstance(TE_est,float):
+        return TE_est
+    else:
+        return TE_est[0]
 
 
 ## This function will take data as a numpy array of shape (n,m) where n is the number of nodes and m the number of datapoints for each.
