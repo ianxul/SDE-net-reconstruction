@@ -79,6 +79,51 @@ def find_sol_lp(dt, E, verbose = True):
     A_sol = get_A_sol(x_sol, n, alphas, betas, E)
     if verbose: print(opt_res)
     return A_sol
+ 
+# Find sol min-dis
+def find_sol_lstsq(dt, E):
+    n = E.shape[0]
+    gamma = get_gamma(dt)
+    u, U = la.eig(gamma)
+
+    alphas, betas = calc_consts(n, U, u)
+
+    phi_list = []
+    for i in range(n):
+        for j in range(n):
+            if E[i,j] == 0:
+                phi_list.append((i,j))
+    
+    zero_count = len(phi_list)
+
+
+    ut_lst = []
+    for i in range(n):
+        for j in range(i+1,n):
+            ut_lst.append((i,j))
+    
+    ut_m = len(ut_lst)
+
+    Alpha_mat = np.full((zero_count, ut_m), 0.)
+    for k in range(zero_count):
+        i,j = phi_list[k]
+        for r in range(ut_m):
+            ll, kk = ut_lst[r]
+            Alpha_mat[k,r] = alphas[i,j,ll,kk]
+
+    beta_vec = np.full(zero_count, 0.)
+    for k in range(zero_count):
+        i,j = phi_list[k]
+        beta_vec[k] = -betas[i,j]
+    
+    # sol_sys = np.matmul(Alpha_mat.T, Alpha_mat)
+    # sol_vec = np.matmul(Alpha_mat.T, beta_vec)
+
+    # x_sol = la.solve(sol_sys, sol_vec)
+
+    x_sol = la.lstsq(Alpha_mat, beta_vec)[0]
+
+    return get_A_sol(x_sol, n, alphas, betas, E)
 
 # Solving the problem under the assumption that the number of zeroes is exactly n(n-1)/2.
 def find_sol_la(dt, E):
