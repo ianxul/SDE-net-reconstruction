@@ -4,9 +4,6 @@ import scipy.linalg as la
 from scipy.optimize import linprog
 from itertools import combinations
 
-def get_gamma(dt):
-    return sum([np.dot(np.transpose([dt[i,]]), np.array([dt[i,]])) for i in range(len(dt[:,0]))])/len(dt[:,0])
-
 def calc_consts(n, U, u):
     alphas = np.full((n,n,n,n), 0.0)
     for i in range(n):
@@ -34,7 +31,7 @@ def get_A_sol(x_sol, n, alphas, betas, E):
 # Linear programming to find solution. Assumption is that there are at least n(n-1)/2 zeroes.
 def find_sol_lp(dt, E, verbose = True):
     n = E.shape[0]
-    gamma = get_gamma(dt)
+    gamma = np.cov(dt)
     u, U = la.eig(gamma)
 
     alphas, betas = calc_consts(n, U, u)
@@ -83,7 +80,7 @@ def find_sol_lp(dt, E, verbose = True):
 # Find sol min-dis
 def find_sol_lstsq(dt, E):
     n = E.shape[0]
-    gamma = get_gamma(dt)
+    gamma = np.cov(dt)
     u, U = la.eig(gamma)
 
     alphas, betas = calc_consts(n, U, u)
@@ -128,7 +125,7 @@ def find_sol_lstsq(dt, E):
 # Solving the problem under the assumption that the number of zeroes is exactly n(n-1)/2.
 def find_sol_la(dt, E):
     n = E.shape[0]
-    gamma = get_gamma(dt)
+    gamma = np.cov(dt)
     u, U = la.eig(gamma)
 
     alphas, betas = calc_consts(n, U, u)

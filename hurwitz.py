@@ -70,6 +70,11 @@ def run_process(A_mat:np.matrix, time_length:float, step:float = 0.1, noise = 1.
 
     return np.array(data)
 
+# Not very efficient but useful for small matrices. 
+def analytic_gamma(A):
+    n = A.shape[0]
+    return np.reshape(-np.matmul(np.linalg.inv(np.kron(A, np.identity(n)) + np.kron(np.identity(n), A)), np.matrix.flatten(np.identity(n))), (n,n))
+
 def plot_A_img(A):
     A_bound = np.max(np.abs(A))
     plt = px.imshow(A, -A_bound, A_bound)
