@@ -99,6 +99,23 @@ def make_triple_imshow(A1, A2, A3, titles = ["A", "Linear Programming", "Least S
     
     fig.show()
 
+def make_full_imshow(As, titles):
+    bound_val = np.max([np.max(np.abs(A)) for A in As])
+    fig = make_subplots(rows=1+np.ceil((len(As)-1)/3), cols=3, subplot_titles=titles)
+    fig.add_trace(
+        go.Heatmap(z=As[0], zmax = bound_val, zmin = -bound_val, zmid = 0, showscale=True, colorscale="RdBu", reversescale=True),
+        row = 1, col = 1
+    )
+    for i in range(len(As)-1):
+        fig.add_trace(
+            go.Heatmap(z=As[i+1], zmax = bound_val, zmin = -bound_val, zmid = 0, showscale=False, colorscale="RdBu", reversescale=True),
+            row = 2+(i//3), col = 1+(i%3)
+        )
+    
+    fig.update_yaxes(autorange = 'reversed')
+    
+    fig.show()
+
 def calc_mat_dist(mat1, mat2):
     n = mat1.shape[0]
     return np.sum(np.abs(mat1-mat2))/n**2

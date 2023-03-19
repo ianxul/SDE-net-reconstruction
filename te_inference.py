@@ -29,7 +29,7 @@ def get_threshold(alpha, TE_estimator, source_num = 1, points = 100000, reps = 1
 def perform_inference(dt, alpha = 0.05, test_reps = 100, gpu = False, limit = None, report_edges = True):
     n, m = dt.shape
     if not limit:
-        limit = n*(n-1)
+        limit = (n*(n-1))//2
 
     if not gpu:
         # If not using GPU use the JIDT estimator. Here we use CMI instead of TE for consistency with the OpenCL implementation.
@@ -96,6 +96,37 @@ def perform_inference(dt, alpha = 0.05, test_reps = 100, gpu = False, limit = No
     thresholds_file.close()
 
     return adj_mat
+
+def perform_inference_max(dt, gpu = False):
+    n, m = dt.shape
+    limit = (n*(n-1))//2
+
+    if not gpu:
+        # If not using GPU use the JIDT estimator. Here we use CMI instead of TE for consistency with the OpenCL implementation.
+        TE_estimator = JidtKraskovCMI()
+    else:
+        TE_estimator = OpenCLKraskovCMI()
+
+    # Adjacency matrix starts with all recurrent connections
+    adj_mat = np.identity(n,int)
+    te_vals = np.zeros((n,n))
+    count = 0
+
+    ## Fill heap with TE values.
+    node_heap = []
+    for i in range(n):
+        for j in range(n):
+            if i == j:
+                continue
+            heapq.heappush(node_heap, (-te_estimate.estimate_CTE(dt[j,:], dt[i,:], TE_estimator), i, j))
+    
+    while count < limit:
+        te_val, i, j = node_heap.pop()
+        adj_mat[i,j] = 1
+        te_vals[i,j] = te_val
+        count += 1
+    
+    return adj_mat, te_vals
             
 
 def is_success(A, E):
