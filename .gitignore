@@ -130,6 +130,7 @@ dmypy.json
 
 # Local notebook for tests
 local_tests.ipynb
+progress_presentation.ipynb
 
 # Pickled objects
 pickles/
