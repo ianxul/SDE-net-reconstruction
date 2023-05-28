@@ -8,12 +8,12 @@ import plotly.graph_objects as go
 import plotly.express as px
 
 # Function to generate a random Hurtzian matrix. In this function the number of edges is restricted to be less than the upper triangle number. There is no restriction on symmetric connections.
-def random_hurwitz(n) -> np.matrix:
+def random_hurwitz(n, ep = 0.2, allow_underdet = False) -> np.matrix:
     # Random directed graph. p = 2/n seems reasonable to keep graph sparce.
+    G = nx.fast_gnp_random_graph(n, p = ep/n, directed=True)
     # While the graph has too many edges keep repeating.
-    while True:
-        G = nx.fast_gnp_random_graph(n, p = 2./n, directed=True)
-        if len(G.edges) < (n*(n-1))//2: break
+    while not len(G.edges) < (n*(n-1))//2 and not allow_underdet:
+        G = nx.fast_gnp_random_graph(n, p = ep/n, directed=True)
 
     A_mat = np.full((n,n), 0.)
     # Assign random weight to all edges according to normal
@@ -30,11 +30,10 @@ def random_hurwitz(n) -> np.matrix:
     return A_mat
 
 # Same as above but with added restriction to non symmmetric connections.
-def random_hurwitz_nonsym(n) -> np.matrix:
+def random_hurwitz_nonsym(n, ep = 0.2) -> np.matrix:
+    # Random directed graph. p = 2/n seems reasonable to keep graph sparce.
+    G = nx.fast_gnp_random_graph(n, p = ep/n, directed=True)
     
-    while True:
-        G = nx.fast_gnp_random_graph(n, p = 2./n)
-        if len(G.edges) < (n*(n-1)): break
     A_mat = np.full((n,n), 0.)
 
     # Assign random weight to one of the two directions. If previously assigned skip.
