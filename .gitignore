@@ -131,6 +131,11 @@ dmypy.json
 # Local notebook for tests
 local_tests.ipynb
 progress_presentation.ipynb
+alternative_formulation.ipynb
+other_optimizers.ipynb
 
 # Pickled objects
 pickles/
+
+# Obsolete files
+obs/

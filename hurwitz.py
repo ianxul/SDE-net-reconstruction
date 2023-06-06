@@ -7,6 +7,12 @@ from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import plotly.express as px
 
+# This is a workaround to run Julia from Python interactively. However, this takes in general a couple minutes.
+from julia.api import Julia
+print("Starting up Julia...")
+jl = Julia(compiled_modules=False)
+from diffeqpy import de
+
 # Function to generate a random Hurtzian matrix. In this function the number of edges is restricted to be less than the upper triangle number. There is no restriction on symmetric connections.
 def random_hurwitz(n, ep = 0.2, allow_underdet = False) -> np.matrix:
     # Random directed graph. p = 2/n seems reasonable to keep graph sparce.
@@ -68,6 +74,36 @@ def run_process(A_mat:np.matrix, time_length:float, step:float = 0.1, noise = 1.
         data.append(SDE.integrate(time))
 
     return np.array(data)
+
+def run_process_jl(A_mat:np.matrix, time_length:float, step:float = 0.1, noise = 1., process_step = False) -> np.array:
+    n = A_mat.shape[0]
+    
+    def f(du, u, p, t):
+        A, n, _ = p
+        for i in range(n):
+            du[i] = sum([A[i,j]*u[j] for j in range(n)])
+
+    def g(du, u, p, t):
+        _, _, noise = p
+        for i in range(n):
+            du[i] = noise
+    
+    # numba_f = numba.jit(f)
+    # numba_g = numba.jit(g)
+    numba_f = f
+    numba_g = g
+
+    u0 = np.zeros(n)
+    tspan = (0.0, time_length)
+    p = [A_mat, n, noise]
+    
+    prob = de.SDEProblem(numba_f, numba_g, u0, tspan, p)
+    if not process_step:
+        sol = de.solve(prob, de.LambaEM(), saveat = step)
+    else: 
+        sol = de.solve(prob, de.EM(), dt = process_step, saveat = step)
+
+    return np.transpose(sol.u)
 
 # Not very efficient but useful for small matrices. 
 def analytic_gamma(A):
