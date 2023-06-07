@@ -84,7 +84,7 @@ def find_sol_lstsq(dt, E):
         i,j = phi_list[k]
         for r in range(ut_m):
             ll, kk = ut_lst[r]
-            Alpha_mat[k,r] = alphas(i,j,ll,kk)
+            Alpha_mat[k,r] = alphas(i,j,ll,kk, U, u)
 
     beta_vec = np.full(zero_count, 0.)
     for k in range(zero_count):
@@ -93,5 +93,5 @@ def find_sol_lstsq(dt, E):
 
     x_sol = la.lstsq(Alpha_mat, beta_vec)[0]
 
-    return get_A_sol(x_sol, n, alphas, betas, E)
+    return get_A_sol(x_sol, n, U, u)
     
