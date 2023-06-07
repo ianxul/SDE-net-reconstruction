@@ -23,14 +23,7 @@ def find_sol_lp(dt, E, verbose = True):
 
     ## Objective weights of the dims. These are chosen so that the weights of the edges have minimum sum.
     ut_n = (n*(n-1))//2
-    m = 0
-    # This loop counts the number of entries of E which are equal to zero
-    for i in range(n):
-        for j in range(n):
-            # We don't optimize over non-existing edges
-            if E[i,j] == 1.:
-                continue
-            m += 1
+    m = np.sum(np.abs(E-1))
     
     # Vector used in the linear programming method. It determines the weight of the values of x when minimizing. 
     c = np.array([0.0]*ut_n + [1.0]*m)
