@@ -3,10 +3,10 @@ import scipy.linalg as la
 import cvxpy as cvx
 
 # !These are not the same alphas and betas used in the other inference script.
-## alphas multiply the entries of the matrix
+## alphas define the restriction matrix for the rows corresponding to non diagonal entries in A bar.
 def alphas(i, j, l, k, U, u):
     return u[j]*U[l,i]*U[k,j] + u[i]*U[l,j]*U[k,i]
-## betas define the vector b in the constraints Ax = b
+## betas the rows corresponding to the diagonal entries
 def betas(i, l, k, U):
     return U[l,i]*U[k,i]
 
@@ -36,7 +36,7 @@ def find_sol_cvx(E : np.array, dt = None, gamma = None, verbose = False, eps_abs
                     if (i!=j):
                         Alpha_mat[c1, c2] = alphas(i, j, l, k, U, u).real
                     else:
-                        Alpha_mat[c1, c2] = betas(i, l, k, U, u).real
+                        Alpha_mat[c1, c2] = betas(i, l, k, U).real
                     c2 += 1
             c1 += 1
 
