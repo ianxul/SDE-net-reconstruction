@@ -44,4 +44,5 @@ def find_sol_cvx(E : np.array, dt = None, gamma = None, verbose = False, eps_abs
     objective = cvx.Minimize(cvx.norm(cvx.multiply(zero_inds,vx), 1))
     constraints = [Alpha_mat@vx == beta_vec]
     prob = cvx.Problem(objective, constraints)
-    return prob.solve(verbose=verbose, solver = cvx.SCS, eps_abs = eps_abs, max_iters = max_iters)
+    prob.solve(verbose=verbose, solver = cvx.SCS, eps_abs = eps_abs, max_iters = max_iters)
+    return np.reshape(vx.value, (n,n))
