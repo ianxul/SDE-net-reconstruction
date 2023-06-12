@@ -54,7 +54,7 @@ def random_hurwitz_nonsym(n, ep = 0.2) -> np.matrix:
             A_mat[ii,ii] -= 0.9
     return A_mat
 
-def run_process(A_mat:np.matrix, time_length:float, step:float = 0.1, noise = 1., verbose = True, diff_sys = None) -> np.array:
+def run_process(A_mat:np.matrix, time_length:float, step:float = 0.1, noise:float = 1., saturating:bool = False, verbose:bool = True, diff_sys = None) -> np.array:
     N = len(A_mat)
     # Define deterministic part of differential equation
     if diff_sys is None:
@@ -75,13 +75,19 @@ def run_process(A_mat:np.matrix, time_length:float, step:float = 0.1, noise = 1.
 
     return np.array(data)
 
-def run_process_jl(A_mat:np.matrix, time_length:float, step:float = 0.1, noise = 1., process_step = False) -> np.array:
+def run_process_jl(A_mat:np.matrix, time_length:float, step:float = 0.1, noise:float = 1., saturating:bool = False, process_step = False) -> np.array:
     n = A_mat.shape[0]
     
-    def f(du, u, p, t):
-        A, n, _ = p
-        for i in range(n):
-            du[i] = sum([A[i,j]*u[j] for j in range(n)])
+    if not saturating:
+        def f(du, u, p, t):
+            A, n, _ = p
+            for i in range(n):
+                du[i] = sum([A[i,j]*u[j] for j in range(n)])
+    else: 
+        def f(du, u, p, t):
+            A, n, _ = p
+            for i in range(n):
+                du[i] = de.tanh(sum([A[i,j]*u[j] for j in range(n)]))
 
     def g(du, u, p, t):
         _, _, noise = p
@@ -104,6 +110,7 @@ def run_process_jl(A_mat:np.matrix, time_length:float, step:float = 0.1, noise =
         sol = de.solve(prob, de.EM(), dt = process_step, saveat = step)
 
     return np.transpose(sol.u)
+
 
 # Not very efficient but useful for small matrices. 
 def analytic_gamma(A):
