@@ -135,7 +135,8 @@ alternative_formulation.ipynb
 other_optimizers.ipynb
 
 # Pickled objects
-pickles/
+pickles/data
+pickles/results/trash
 
 # Obsolete files
 obs/
