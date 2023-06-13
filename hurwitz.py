@@ -87,7 +87,7 @@ def run_process_jl(A_mat:np.matrix, time_length:float, step:float = 0.1, noise:f
         def f(du, u, p, t):
             A, n, _ = p
             for i in range(n):
-                du[i] = de.tanh(sum([A[i,j]*u[j] for j in range(n)]))
+                du[i] = np.tanh(sum([A[i,j]*u[j] for j in range(n)]))
 
     def g(du, u, p, t):
         _, _, noise = p

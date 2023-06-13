@@ -11,10 +11,10 @@ import cvx_inference
 import corr_inference
 
 # Function to generate time-series data for random matrices and save them as pickles. 
-def gen_rand_timeseries(save_folder = "pickles/data/runs/", data_points = 100000, sample_steps = [0.1], Ns = [10], edge_probs = [0.2], mats_num = 100, mats_reps = 1, allow_sym = True, allow_underdet = False, comments = ""):
+def gen_rand_timeseries(save_folder = "pickles/data/runs/", data_points = 100000, sample_steps = [0.1], Ns = [10], edge_probs = [0.2], mats_num = 100, mats_reps = 1, allow_sym = True, allow_underdet = False, saturating : bool = False, comments = ""):
     
     for N, mat_num, ep, step_size in tqdm.tqdm(list(itertools.product(Ns, range(mats_num), edge_probs, sample_steps))):
-        file_name = save_folder+"N{}_MatNum_{}_ss{:.2f}_ep{:.2f}{}{}.pkl".format(N, mat_num, step_size, ep, "_as"*allow_sym, "_au"*allow_underdet)
+        file_name = save_folder+"N{}_MatNum_{}_ss{:.2f}_ep{:.2f}{}{}{}.pkl".format(N, mat_num, step_size, ep, "_as"*allow_sym, "_au"*allow_underdet, "_sat"*saturating)
         
         if allow_sym:
             A = hurwitz.random_hurwitz(N, ep, allow_underdet=allow_underdet)
@@ -32,7 +32,7 @@ def gen_rand_timeseries(save_folder = "pickles/data/runs/", data_points = 100000
 
         while len(pkl_obj["Sims"]) < mats_reps:
             # Generate simulated data for analysis. 
-            data_np = hurwitz.run_process_jl(A, data_points*step_size, step_size)
+            data_np = hurwitz.run_process_jl(A, data_points*step_size, step_size, saturating = saturating)
 
             pkl_obj["Sims"].append(data_np)
         
@@ -40,16 +40,16 @@ def gen_rand_timeseries(save_folder = "pickles/data/runs/", data_points = 100000
         pickle.dump(pkl_obj, pkl_file)
         pkl_file.close()
 
-def run_E_inference(save_folder = "pickles/results/inferences/", run_folder = "pickles/data/runs/", data_points = 100000, alphas = [0.05], sample_steps = [0.1], Ns = [10], edge_probs = [0.2], mats_num = 100, mats_reps = 1, allow_sym = True, allow_underdet = False):
+def run_E_inference(save_folder = "pickles/results/inferences/", run_folder = "pickles/data/runs/", data_points = 100000, alphas = [0.05], sample_steps = [0.1], Ns = [10], edge_probs = [0.2], mats_num = 100, mats_reps = 1, allow_sym = True, allow_underdet = False, saturating:bool = False):
     
     for N, mat_num, ep, step_size in tqdm.tqdm(list(itertools.product(Ns, range(mats_num), edge_probs, sample_steps))):
-        save_file_name = save_folder+"N{}_ss{:.2f}_ep{:.2f}{}{}.pkl".format(N, step_size, ep, "_as"*allow_sym, "_au"*allow_underdet)
+        save_file_name = save_folder+"N{}_ss{:.2f}_ep{:.2f}{}{}{}.pkl".format(N, step_size, ep, "_as"*allow_sym, "_au"*allow_underdet,"_sat"*saturating)
         if os.path.isfile(save_file_name):
             pkl_obj = pickle.load(open(save_file_name,"rb"))
         else:
             pkl_obj = dict()
 
-        run_file_name = run_folder+"N{}_MatNum_{}_ss{:.2f}_ep{:.2f}{}{}.pkl".format(N, mat_num, step_size, ep, "_as"*allow_sym, "_au"*allow_underdet)
+        run_file_name = run_folder+"N{}_MatNum_{}_ss{:.2f}_ep{:.2f}{}{}{}.pkl".format(N, mat_num, step_size, ep, "_as"*allow_sym, "_au"*allow_underdet,"_sat"*saturating)
         if os.path.isfile(run_file_name):
             pkl_dt_obj = pickle.load(open(run_file_name,"rb"))
         if not os.path.isfile(run_file_name) or len(pkl_dt_obj["Sims"])<mats_reps:
@@ -68,17 +68,21 @@ def run_E_inference(save_folder = "pickles/results/inferences/", run_folder = "p
         for rep in range(mats_reps):
             # Generate simulated data for analysis. 
             for alpha in alphas:
-                E_inf = te_inference.perform_inference(pkl_dt_obj["Sims"][rep][0:data_points], gpu = True, alpha = alpha, report_edges=False)
+                if alpha*100 < 5:
+                    test_reps = int(5/alpha)
+                else:
+                    test_reps = 100
+                E_inf = te_inference.perform_inference(pkl_dt_obj["Sims"][rep][0:data_points], gpu = True, alpha = alpha, test_reps = test_reps, report_edges=False)
                 pkl_obj[mat_num][alpha]["E Inference"].append(E_inf)
         
         pkl_save_file = open(save_file_name, "wb")
         pickle.dump(pkl_obj, pkl_save_file)
         pkl_save_file.close()
 
-def run_A_inference(save_folder = "pickles/results/inferences/", methods = ["Full Info + LP", "Full Info + LstSq", "No Info + LP", "No Info + LstSq", "TE + LP", "TE + LstSq", "No Info Tot + LP", "No Info Tot + LstSq"], data_points = 100000, alphas = [0.05], sample_steps = [0.1], Ns = [10], edge_probs = [0.2], mats_num = 100, mats_reps = 1, allow_sym = True, allow_underdet = False):
+def run_A_inference(save_folder = "pickles/results/inferences/", methods = ["Full Info + LP", "Full Info + LstSq", "No Info + LP", "No Info + LstSq", "TE + LP", "TE + LstSq", "No Info Tot + LP", "No Info Tot + LstSq"], data_points = 100000, alphas = [0.05], sample_steps = [0.1], Ns = [10], edge_probs = [0.2], mats_num = 100, mats_reps = 1, allow_sym = True, allow_underdet = False, saturating:bool = False):
 
     for N, mat_num, ep, step_size in tqdm.tqdm(list(itertools.product(Ns, range(mats_num), edge_probs, sample_steps))):
-        save_file_name = save_folder+"N{}_ss{:.2f}_ep{:.2f}{}{}.pkl".format(N, step_size, ep, "_as"*allow_sym, "_au"*allow_underdet)
+        save_file_name = save_folder+"N{}_ss{:.2f}_ep{:.2f}{}{}{}.pkl".format(N, step_size, ep, "_as"*allow_sym, "_au"*allow_underdet,"_sat"*saturating)
         if os.path.isfile(save_file_name):
             pkl_obj = pickle.load(open(save_file_name,"rb"))
         else:
