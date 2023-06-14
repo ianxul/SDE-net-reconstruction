@@ -128,6 +128,8 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+**/.DS_Store
+
 # Local notebook for tests
 local_tests.ipynb
 progress_presentation.ipynb
