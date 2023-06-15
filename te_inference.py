@@ -76,7 +76,7 @@ def perform_inference(dt, alpha = 0.05, test_reps = 100, gpu = False, limit = No
                 thresholds.append(get_threshold(alpha, TE_estimator, source_num = len(thresholds), points = m, reps = test_reps))
             
             if te_val > thresholds[source_num]:
-                if report_edges: print("Adding ({}->{}) edge with TE: {}".format(j,i,te_val))
+                if report_edges: print("Adding ({}->{}) edge with TE: {} and Conditionals: {}".format(j,i,te_val, sources_lst[j]))
                 sources_lst[i].append(j)
                 adj_mat[i, j] = 1 # important to notice the order is the oposite as in adj matrix
                 count += 1

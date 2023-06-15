@@ -161,3 +161,6 @@ def make_full_imshow(As, titles):
 def calc_mat_dist(mat1, mat2):
     n = mat1.shape[0]
     return np.sum(np.abs(mat1-mat2))/n**2
+
+def calc_mat_cos(mat1, mat2):
+    return np.sum(mat1*mat2)
