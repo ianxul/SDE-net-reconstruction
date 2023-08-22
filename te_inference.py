@@ -76,7 +76,7 @@ def perform_inference(dt, alpha = 0.05, test_reps = 100, gpu = False, limit = No
                 thresholds.append(get_threshold(alpha, TE_estimator, source_num = len(thresholds), points = m, reps = test_reps))
             
             if te_val > thresholds[source_num]:
-                if report_edges: print("Adding ({}->{}) edge with TE: {} and Conditionals: {}".format(j,i,te_val, sources_lst[j]))
+                if report_edges: print("Adding ({}->{}) edge with TE: {} and Conditionals: {}".format(j,i,te_val, sources_lst[i]))
                 sources_lst[i].append(j)
                 adj_mat[i, j] = 1 # important to notice the order is the oposite as in adj matrix
                 count += 1
@@ -97,9 +97,18 @@ def perform_inference(dt, alpha = 0.05, test_reps = 100, gpu = False, limit = No
 
     return adj_mat
 
-def perform_inference_max(dt, gpu = False):
+def perform_inference_max(dt, alpha = 0.05, test_reps = 100, gpu = False, limit = None, report_edges = True):
     n, m = dt.shape
     limit = (n*(n-1))//2
+
+    # To be more efficient we store the threshold values found
+    threshold_file_name = "pickles/thresh_{}alpha_{}points_{}reps.pkl".format(int(alpha*100), m, test_reps)
+    if os.path.isfile(threshold_file_name):
+        thresholds_file = open(threshold_file_name, 'rb')
+        thresholds = pickle.load(thresholds_file)
+        thresholds_file.close()
+    else:   
+        thresholds = [0, get_threshold(alpha, TE_estimator, points = m, reps = test_reps)]
 
     if not gpu:
         # If not using GPU use the JIDT estimator. Here we use CMI instead of TE for consistency with the OpenCL implementation.
@@ -120,8 +129,8 @@ def perform_inference_max(dt, gpu = False):
                 continue
             heapq.heappush(node_heap, (-te_estimate.estimate_CTE(dt[j,:], dt[i,:], TE_estimator), i, j))
     
-    while count < limit:
-        te_val, i, j = node_heap.pop()
+    while count < limit and node_heap[0][0] < -thresholds[1]:
+        te_val, i, j = heapq.heappop(node_heap)
         adj_mat[i,j] = 1
         te_vals[i,j] = te_val
         count += 1

@@ -1,7 +1,7 @@
 import numpy as np
-# import networkx as nx
+import networkx as nx
 
-# from jitcsde import jitcsde, y
+from jitcsde import jitcsde, y
 
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
@@ -87,7 +87,8 @@ def run_process_jl(A_mat:np.matrix, time_length:float, step:float = 0.1, noise:f
         def f(du, u, p, t):
             A, n, _ = p
             for i in range(n):
-                du[i] = np.tanh(sum([A[i,j]*u[j] for j in range(n)]))
+                # du[i] = np.tanh(sum([A[i,j]*u[j] for j in range(n)])) # First version of saturation
+                du[i] = sum([np.tanh(A[i,j]*u[j]) for j in range(n)])
 
     def g(du, u, p, t):
         _, _, noise = p

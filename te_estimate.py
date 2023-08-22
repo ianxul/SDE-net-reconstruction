@@ -25,7 +25,7 @@ def estimate_CTE(source, target, TE_estimator, conditions = np.array([]), tau_so
 
 
 ## This function will take data as a numpy array of shape (n,m) where n is the number of nodes and m the number of datapoints for each.
-def generate_TE_mat(data, tau_source = 1, tau_target = 1, gpu = False):
+def generate_TE_mat(data, E = None, tau_source = 1, tau_target = 1, gpu = False):
     n, _ = data.shape
 
     TE_mat = np.full((n,n), 0.0)
@@ -36,11 +36,17 @@ def generate_TE_mat(data, tau_source = 1, tau_target = 1, gpu = False):
         TE_estimator = OpenCLKraskovCMI()
     
     for i in range(n):
+        source_lst = []
+        if not E is None:
+            for j in range(n):
+                if i==j:continue
+                if E[i,j] == 1:
+                    source_lst.append(j)
         for j in range(n):
             if i == j: 
                 TE_mat[i,i] = 1.0
                 continue
             ## The complicated bounds correspond to the restrictions given by the delays on each process
-            TE_mat[i,j] = estimate_CTE(data[i,:], data[j,:], TE_estimator, tau_source = tau_source, tau_target = tau_target)
+            TE_mat[j,i] = estimate_CTE(data[j,:], data[i,:], TE_estimator, conditions = data[[k for k in source_lst if k!=j],:].T, tau_source = tau_source, tau_target = tau_target)
 
     return TE_mat
