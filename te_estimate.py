@@ -3,7 +3,7 @@ import numpy as np
 from idtxl.estimators_jidt import JidtKraskovCMI
 from idtxl.estimators_opencl import OpenCLKraskovCMI
 
-## Function that takes a source and target vector and an IDTxl TE estimator and calculates TE. Optionally more conditions can be passed along (not implemented yet). 
+## Function that takes a source and target vector and an IDTxl TE estimator and calculates TE. Optionally more conditions can be passed along. 
 def estimate_CTE(source, target, TE_estimator, conditions = np.array([]), tau_source = 1, tau_target = 1, tau_conditions = 1):
     max_tau = max(tau_source, tau_target, tau_conditions)
     if not np.any(conditions):
@@ -25,6 +25,7 @@ def estimate_CTE(source, target, TE_estimator, conditions = np.array([]), tau_so
 
 
 ## This function will take data as a numpy array of shape (n,m) where n is the number of nodes and m the number of datapoints for each.
+## It will return a matrix of shape (n,n) where the element (i,j) is the estimated TE from j to i.
 def generate_TE_mat(data, E = None, tau_source = 1, tau_target = 1, gpu = False):
     n, _ = data.shape
 

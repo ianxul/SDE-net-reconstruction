@@ -136,6 +136,7 @@ progress_presentation.ipynb
 alternative_formulation.ipynb
 other_optimizers.ipynb
 experiments.py
+non_linears.py
 
 # Pickled objects
 pickles/data

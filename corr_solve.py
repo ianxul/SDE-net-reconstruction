@@ -2,12 +2,17 @@ import numpy as np
 import scipy.linalg as la
 from scipy.optimize import linprog
 
-# Function to generate constants with less memory usage
+### ¡ WARNING: This is a previous version of the method that did the opmization on the bar{A} space instead of the later version directly over the solution space of the Lyapunov equation.  ! ###
+### ¡ Please use the cvx_inference.py script instead. ! ###
+
+# ¡These are not the same alphas and betas of cvx_inference.py! 
+# Function to generate constants for less memory usage. i,j,l,k are indices, U is the eigenvector matrix, u is the eigenvalue vector.
 def alphas(i, j, l, k, U, u):
     return (U[i,l]*U[j,k] - (u[k]/u[l])*U[i,k]*U[j,l])
 def betas(i, j, U, u):
     return sum([-U[i,s]*U[j,s]/(2*u[s]) for s in range(len(u))])
 
+# Function to generate the A matrix from x_sol. x_sol is the solution to the linear programming problem, n is the number of dimensions, U is the eigenvector matrix, u is the eigenvalue vector.
 def get_A_sol(x_sol, n, U, u):
     A_sol = np.full((n,n), 0.0)
     for i in range(n):
@@ -15,13 +20,13 @@ def get_A_sol(x_sol, n, U, u):
             A_sol[i,j] = betas(i,j, U, u) + sum(x_sol*np.array([alphas(i,j,l,k, U, u) for l in range(n) for k in range(l+1,n)]))
     return A_sol
 
-# Linear programming to find solution. Assumption is that there are at least n(n-1)/2 zeroes.
+# Linear programming to find solution. Assumption is that there are at least n(n-1)/2 zeroes. Returns reconstructed A matrix.
 def find_sol_lp(dt, E, verbose = True):
     n = E.shape[0]
     gamma = np.cov(dt)
     u, U = la.eig(gamma)
 
-    ## Objective weights of the dims. These are chosen so that the weights of the edges have minimum sum.
+    # Number of upper triangular elements in the A matrix and number of zeroes in E
     ut_n = (n*(n-1))//2
     m = np.sum(np.abs(E-1))
     
@@ -34,7 +39,7 @@ def find_sol_lp(dt, E, verbose = True):
     m_count = 0
     for i in range(n):
         for j in range(n):
-            # Existing edges don't give us restrictions
+            # Edges priorly determined to exist don't give us restrictions
             if E[i,j] == 1.:
                 continue
             A_ub.append([alphas(i,j,l,k, U, u) for l in range(n) for k in range(l+1, n)] + [-1.0*(i == m_count) for i in range(m)])
@@ -57,7 +62,7 @@ def find_sol_lp(dt, E, verbose = True):
     if verbose: print(opt_res)
     return A_sol
  
-# Find sol min-dis
+# Find sol min-dis in L2 norm. This is a more direct and fast method than the linear programming but performs worse in practice. Returns reconstructed A matrix.
 def find_sol_lstsq(dt, E):
     n = E.shape[0]
     gamma = np.cov(dt)

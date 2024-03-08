@@ -8,9 +8,9 @@ import heapq
 import pickle
 import os
 
-## Functions related to finding directed edges
+## Functions related to finding directed edges using transfer entropy
 
-# Based on Rahimzamani & Kannan a first approach to testing significance is using gaussian variables.
+# Based on Rahimzamani & Kannan, a first approach to testing significance is using gaussian variables.
 def get_threshold(alpha, TE_estimator, source_num = 1, points = 100000, reps = 100):
     # Create a lits of TE values from surrogate data (for now gaussian)
     vals = []
@@ -26,6 +26,8 @@ def get_threshold(alpha, TE_estimator, source_num = 1, points = 100000, reps = 1
     # Return threshold value
     return vals[int(alpha*reps)]
 
+# It will return an adjacency matrix E of shape (n,n) where the element (i,j) is 1 if there is a directed edge from j to i and 0 otherwise.
+# Will stop when it has found limit edges or when it has tested all possible edges.
 def perform_inference(dt, alpha = 0.05, test_reps = 100, gpu = False, limit = None, report_edges = True):
     n, m = dt.shape
     if not limit:
@@ -97,6 +99,7 @@ def perform_inference(dt, alpha = 0.05, test_reps = 100, gpu = False, limit = No
 
     return adj_mat
 
+# Second approach to creating a directed graph using transfer entropy. This time using selecting only the max value of TE for each node. Not used in paper. .
 def perform_inference_max(dt, alpha = 0.05, test_reps = 100, gpu = False, limit = None, report_edges = True):
     n, m = dt.shape
     limit = (n*(n-1))//2
@@ -136,8 +139,3 @@ def perform_inference_max(dt, alpha = 0.05, test_reps = 100, gpu = False, limit 
         count += 1
     
     return adj_mat, te_vals
-            
-
-def is_success(A, E):
-    E_real = np.abs(np.sign(A))
-    return np.array_equal(E_real, np.multiply(E_real, E))
