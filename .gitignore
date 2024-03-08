@@ -142,3 +142,20 @@ pickles/results/trash
 
 # Obsolete files
 obs/
+
+# 
+clustercode/
+
+# Code for figures
+figures.py
+article_figures.ipynb
+particular_examples.ipynb
+
+# Data
+pickles/
+
+# Figures
+figs/
+
+# Tests
+tests/

@@ -3,15 +3,11 @@ import networkx as nx
 
 from jitcsde import jitcsde, y
 
-from plotly.subplots import make_subplots
-import plotly.graph_objects as go
-import plotly.express as px
-
 # This is a workaround to run Julia from Python interactively. However, this takes in general a couple minutes.
-from julia.api import Julia
-print("Starting up Julia...")
-jl = Julia(compiled_modules=False)
-from diffeqpy import de
+# from julia.api import Julia
+# print("Starting up Julia...")
+# jl = Julia(compiled_modules=False)
+# from diffeqpy import de
 
 # Function to generate a random Hurtzian matrix. In this function the number of edges is restricted to be less than the upper triangle number. There is no restriction on symmetric connections.
 def random_hurwitz(n, ep = 0.2, allow_underdet = False) -> np.matrix:
@@ -54,6 +50,25 @@ def random_hurwitz_nonsym(n, ep = 0.2) -> np.matrix:
             A_mat[ii,ii] -= 0.9
     return A_mat
 
+def random_hurwitz_dominant(n, edm, eps, max_reig_rad = 0.1):
+
+    while 1:
+        # Random directed graph
+        G = nx.gnm_random_graph(n, edm, directed=True)
+        B = np.full((n,n), 0.)
+        # Assign random weight to all edges according to normal
+        for e in G.edges:
+            B[e[0],e[1]] = np.random.randn()
+
+        eigs = np.linalg.eigvals(B)
+        max_reig = np.max(np.real(eigs))
+        if abs(max_reig) > max_reig_rad:
+            break
+
+    B = -np.eye(n) + (1-eps)*B/max_reig
+    return B
+
+
 def run_process(A_mat:np.matrix, time_length:float, step:float = 0.1, noise:float = 1., saturating:bool = False, verbose:bool = True, diff_sys = None) -> np.array:
     N = len(A_mat)
     # Define deterministic part of differential equation
@@ -88,7 +103,7 @@ def run_process_jl(A_mat:np.matrix, time_length:float, step:float = 0.1, noise:f
             A, n, _ = p
             for i in range(n):
                 # du[i] = np.tanh(sum([A[i,j]*u[j] for j in range(n)])) # First version of saturation
-                du[i] = sum([np.tanh(A[i,j]*u[j]) for j in range(n)])
+                du[i] = A[i,i]*u[i] + np.sum([np.tanh(A[i,j]*u[j]) for j in range(n) if i != j])
 
     def g(du, u, p, t):
         _, _, noise = p
@@ -118,50 +133,18 @@ def analytic_gamma(A):
     n = A.shape[0]
     return np.reshape(-np.matmul(np.linalg.inv(np.kron(A, np.identity(n)) + np.kron(np.identity(n), A)), np.matrix.flatten(np.identity(n))), (n,n))
 
-def plot_A_img(A):
-    A_bound = np.max(np.abs(A))
-    plt = px.imshow(A, -A_bound, A_bound)
-    plt.show()
-
-def make_triple_imshow(A1, A2, A3, titles = ["A", "Linear Programming", "Least Squares"]):
-    bound_val = np.max([np.max(np.abs(A)) for A in [A1,A2,A3]])
-    fig = make_subplots(rows=1, cols=3, subplot_titles=titles)
-    fig.add_trace(
-        go.Heatmap(z=A1, zmax = bound_val, zmin = -bound_val, zmid = 0, showscale=True, colorscale="RdBu", reversescale=True),
-        row = 1, col = 1
-    )
-    fig.add_trace(
-        go.Heatmap(z=A2, zmax = bound_val, zmin = -bound_val, zmid = 0, showscale=False, colorscale="RdBu", reversescale=True),
-        row = 1, col = 2
-    )
-    fig.add_trace(
-        go.Heatmap(z=A3, zmax = bound_val, zmin = -bound_val, zmid = 0, showscale=False, colorscale="RdBu", reversescale=True),
-        row = 1, col = 3
-    )
-    fig.update_yaxes(autorange = 'reversed')
-    
-    fig.show()
-
-def make_full_imshow(As, titles):
-    bound_val = np.max([np.max(np.abs(A)) for A in As])
-    fig = make_subplots(rows=1+np.ceil((len(As)-1)/3), cols=3, subplot_titles=titles)
-    fig.add_trace(
-        go.Heatmap(z=As[0], zmax = bound_val, zmin = -bound_val, zmid = 0, showscale=True, colorscale="RdBu", reversescale=True),
-        row = 1, col = 1
-    )
-    for i in range(len(As)-1):
-        fig.add_trace(
-            go.Heatmap(z=As[i+1], zmax = bound_val, zmin = -bound_val, zmid = 0, showscale=False, colorscale="RdBu", reversescale=True),
-            row = 2+(i//3), col = 1+(i%3)
-        )
-    
-    fig.update_yaxes(autorange = 'reversed')
-    
-    fig.show()
-
-def calc_mat_dist(mat1, mat2):
+def calc_mat_dist(mat1, mat2, ignore_diag = False):
     n = mat1.shape[0]
-    return np.sum(np.abs(mat1-mat2))/n**2
+    if ignore_diag:
+        mat1 = mat1*(np.ones((n,n))-np.identity(n))
+        mat2 = mat2*(np.ones((n,n))-np.identity(n))
+    return np.sum(np.abs(mat1-mat2))/(n**2 - ignore_diag*n)
 
-def calc_mat_cos(mat1, mat2):
-    return np.sum(mat1*mat2)
+def calc_mat_cos(mat1, mat2, ignore_diag = False):
+    n = mat1.shape[0]
+    if ignore_diag:
+        mat1 = mat1*(np.ones((n,n))-np.identity(n))
+        mat2 = mat2*(np.ones((n,n))-np.identity(n))
+    if np.sum(mat1*mat2)==0:
+        return 1.
+    return np.sum(mat1*mat2)/(np.sqrt((mat1*mat1).sum())*np.sqrt((mat2*mat2).sum()))
