@@ -135,6 +135,7 @@ local_tests.ipynb
 progress_presentation.ipynb
 alternative_formulation.ipynb
 other_optimizers.ipynb
+experiments.py
 
 # Pickled objects
 pickles/data
