@@ -1,4 +1,7 @@
-# SDENet-Inference
-The idea of this project is to be able to reconstruct Hurwitz matrices ($A$) using a combination of Transfer Entropy methods and a theorem from control theory which gives us the set of possible $A$ matrices given the correlation matrix. More details in the written document.
+# Sparse Dynamic Network Reconstruction Through L1-regularization of a Lyapunov Equation
+### Ian Xul Belaustegui, Marcela Ordorica Arango, Roman Rossi-Pool, Naomi Ehrich Leonard and Alessio Franci
 
-This repository holds the scripts used. 
+## Abstract:
+An important problem in many areas of science is that of recovering interaction networks from high-dimensional time-series of many interacting dynamical processes. A common approach is to use the elements of the correlation matrix or its inverse as proxies of the interaction strengths, but the reconstructed networks are necessarily undirected. Transfer entropy methods have been proposed to reconstruct directed networks, but the reconstructed network lacks information about interaction strengths. We propose a network reconstruction method that inherits the best of the two approaches by reconstructing a directed weighted network from noisy data under the assumption that the network is sparse and the dynamics are governed by a linear (or weakly-nonlinear) stochastic dynamical system. The two steps of our method are i) constructing an (infinite) family of candidate networks by solving the covariance matrix Lyapunov equation for the state matrix and ii) using $L_1$-regularization to select a sparse solution. We further show how to use prior information on the (non)existence of a few directed edges to dramatically improve the quality of the reconstruction.
+
+This repository holds the scripts used to do the simulations and generate the figures in the paper. 
